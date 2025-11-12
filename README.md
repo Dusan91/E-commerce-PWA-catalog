@@ -16,6 +16,8 @@ A modern e-commerce product catalog application built with React, TypeScript, an
 - **Responsive Design**: Mobile-first design that works on all screen sizes
 - **TypeScript**: Full type safety throughout the application
 - **Custom Hooks**: Reusable business logic encapsulated in custom React hooks
+- **Error Boundaries**: React error boundaries for graceful error handling
+- **Image Zoom**: Click to zoom images with keyboard navigation support
 
 ## Technology Stack
 
@@ -67,6 +69,10 @@ dualSoft/
 │   │   └── api.ts          # API client with caching
 │   ├── types/              # TypeScript type definitions
 │   │   └── product.ts      # Product and category types
+│   ├── constants/          # Application constants
+│   │   └── index.ts        # Cache, image, and app constants
+│   ├── utils/              # Utility functions
+│   │   └── placeholder.ts  # Placeholder image utilities
 │   ├── App.tsx             # Main application component with routing
 │   ├── App.css             # Application styles
 │   ├── main.tsx            # Application entry point
@@ -143,8 +149,9 @@ The application uses Workbox (via vite-plugin-pwa) to implement service worker c
 2. **API Response Caching**: API responses are cached using NetworkFirst strategy:
    - Attempts to fetch from network first
    - Falls back to cache if network fails
-   - Cache expires after 24 hours
-   - Maximum 50 cached entries
+   - Cache expires after 24 hours (service worker) or 5 minutes (client cache)
+   - Maximum 50 cached entries (service worker) or 100 entries (client cache)
+   - Automatic cache cleanup to prevent memory leaks
 
 ### Manifest Configuration
 
@@ -264,12 +271,13 @@ This e-commerce product catalog application is designed as a Progressive Web App
 
 ### 5. Multi-Layer Caching
 
-**Decision**: Implemented both service worker caching (Workbox) and in-memory client-side caching.
+**Decision**: Implemented both service worker caching (Workbox) and in-memory client-side caching with automatic cleanup.
 
 **Rationale**:
 
 - Service worker cache provides offline support
 - In-memory cache reduces redundant API calls within the same session
+- Automatic cleanup prevents memory leaks
 - Works in conjunction for optimal performance
 
 **Pros**:
@@ -278,12 +286,14 @@ This e-commerce product catalog application is designed as a Progressive Web App
 - Reduces server load
 - Better performance during navigation
 - Offline capability
+- Automatic cache cleanup prevents memory issues
+- Cache size limits prevent unbounded growth
 
 **Cons**:
 
 - Uses browser memory (minimal impact for this use case)
 - Cache duration is fixed (24 hours for service worker, 5 minutes for client cache)
-- No manual cache invalidation mechanism
+- Manual cache invalidation requires API call
 
 ### 6. TypeScript for Type Safety
 
@@ -309,7 +319,30 @@ This e-commerce product catalog application is designed as a Progressive Web App
 - Requires type definitions
 - Initial setup overhead
 
-### 7. json-server for Mock API
+### 7. Error Boundaries
+
+**Decision**: Implemented React Error Boundaries to catch and handle component errors gracefully.
+
+**Rationale**:
+
+- Prevents entire app from crashing on component errors
+- Provides user-friendly error messages
+- Allows app to continue functioning despite errors in specific components
+- Better error recovery options
+
+**Pros**:
+
+- Graceful error handling
+- Better user experience during errors
+- Error details in development mode
+- Recovery options (retry, reload)
+
+**Cons**:
+
+- Only catches errors in render phase, not in event handlers
+- Requires class component (React limitation)
+
+### 8. json-server for Mock API
 
 **Decision**: Used json-server instead of a real backend.
 
@@ -361,8 +394,9 @@ This e-commerce product catalog application is designed as a Progressive Web App
    - Responsive design works on all devices
    - Smooth client-side routing with React Router
    - Individual product detail pages with image galleries
+   - Image zoom functionality with full-screen modal
+   - Keyboard navigation (arrow keys) for image browsing
    - Loading states and error handling with retry functionality
-   - Image fallback handling for broken images
 
 5. **Developer Experience**:
 
@@ -388,8 +422,9 @@ This e-commerce product catalog application is designed as a Progressive Web App
 2. **Cache Management**:
 
    - Cache expiration is fixed (24 hours for service worker, 5 minutes for client cache)
-   - No manual cache invalidation mechanism
-   - No cache size monitoring or automatic cleanup beyond limits
+   - Automatic cache cleanup prevents memory leaks
+   - Cache size limits enforced (50 entries for service worker, 100 for client cache)
+   - Manual cache clearing available via API
 
 3. **No Real Backend**:
 
@@ -411,32 +446,16 @@ This e-commerce product catalog application is designed as a Progressive Web App
 
 6. **Image Handling**:
 
-   - No image optimization or lazy loading
-   - Relies on placeholder images for broken links
+   - Images are served locally from public folder
+   - No image optimization or lazy loading (except native lazy loading)
    - No responsive image sizes
+   - Image zoom functionality with keyboard navigation
 
 7. **Error Handling**:
+   - Error boundaries implemented for component-level error catching
    - Basic error handling with retry functionality
-   - No error boundaries for component-level error catching
-   - Limited error reporting and logging
-
-## Future Enhancements
-
-1. **Advanced Filtering**: Add price range, brand, and rating filters
-2. **Search Functionality**: Implement full-text search with debouncing
-3. **Shopping Cart**: Add cart functionality with offline support and local storage persistence
-4. **User Authentication**: Add user accounts, preferences, and wishlist functionality
-5. **Push Notifications**: Notify users about new products, deals, or cart reminders
-6. **Background Sync**: Sync user actions (cart updates, favorites) when connection is restored
-7. **Image Optimization**: Implement lazy loading, responsive images, and WebP format support
-8. **Error Boundaries**: Add React error boundaries for better error handling and recovery
-9. **Testing**: Add unit tests (Jest, React Testing Library) and integration tests
-10. **Performance Monitoring**: Add performance metrics and monitoring
-11. **Accessibility**: Improve ARIA labels, keyboard navigation, and screen reader support
-12. **Internationalization**: Add multi-language support
-13. **Analytics**: Integrate analytics for user behavior tracking
-14. **Cache Management UI**: Add settings for cache management and manual cache clearing
-15. **Product Reviews**: Add user review and rating system
+   - User-friendly error messages
+   - Error details shown in development mode
 
 ## Browser Support
 
