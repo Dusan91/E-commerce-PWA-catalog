@@ -137,6 +137,8 @@
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .product-price {
