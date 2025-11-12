@@ -110,6 +110,29 @@
   color: #6b7280;
 }
 
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.product-tag {
+  padding: 4px 10px;
+  background: #f3f4f6;
+  color: #4b5563;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.product-tag-more {
+  background: #e5e7eb;
+  color: #6b7280;
+  font-style: italic;
+}
+
 .product-footer {
   margin-top: auto;
   padding-top: 12px;

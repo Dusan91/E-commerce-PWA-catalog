@@ -38,6 +38,20 @@ const ProductCard = ({ product }: ProductCardProps): JSX.Element => {
             ({product.reviewsCount} reviews)
           </span>
         </div>
+        {product.tags.length > 0 && (
+          <div className="product-tags">
+            {product.tags.slice(0, 3).map((tag, index) => (
+              <span key={index} className="product-tag">
+                {tag}
+              </span>
+            ))}
+            {product.tags.length > 3 && (
+              <span className="product-tag product-tag-more">
+                +{product.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
         <div className="product-footer">
           <div className="product-price">
             <span className="currency">{product.currency}</span>
