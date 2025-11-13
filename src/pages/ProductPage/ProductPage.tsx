@@ -228,7 +228,9 @@ const ProductPage = (): JSX.Element => {
           </div>
 
           <div className="product-detail-price">
-            <span className="currency">{product.currency}</span>
+            <span className="currency">
+              {product.currency === 'USD' ? '$' : product.currency}
+            </span>
             <span className="amount">{product.price.toFixed(2)}</span>
           </div>
 

@@ -48,12 +48,48 @@ async function fetchWithCache<T>(
   }
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+}
+
 export const api = {
-  async getProducts(category?: string): Promise<Product[]> {
-    const url = category
-      ? `${API_BASE_URL}/products?category=${encodeURIComponent(category)}`
-      : `${API_BASE_URL}/products`
-    return fetchWithCache<Product[]>(url)
+  async getProducts(
+    category?: string,
+    page?: number,
+    limit?: number
+  ): Promise<PaginatedResponse<Product>> {
+    const params = new URLSearchParams()
+    if (category) params.append('category', category)
+    if (page) params.append('_page', String(page))
+    if (limit) params.append('_limit', String(limit))
+
+    const url = `${API_BASE_URL}/products${params.toString() ? `?${params.toString()}` : ''}`
+    
+    const cacheKey = url
+    const cached = cache.get(cacheKey)
+    const now = Date.now()
+
+    if (cached && now - cached.timestamp < CACHE_DURATION) {
+      return cached.data as PaginatedResponse<Product>
+    }
+
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      const data = await response.json()
+      const total = parseInt(response.headers.get('X-Total-Count') || '0', 10)
+      const result: PaginatedResponse<Product> = { data, total }
+      cache.set(cacheKey, { data: result, timestamp: now })
+      cleanupCache()
+      return result
+    } catch (error: unknown) {
+      if (cached) {
+        console.warn('Network request failed, using cached data:', error)
+        return cached.data as PaginatedResponse<Product>
+      }
+      throw error
+    }
   },
 
   async getProduct(productId: string): Promise<Product> {

@@ -9,7 +9,10 @@ const HomePage = (): JSX.Element => {
     selectedCategory,
     isLoading,
     error,
+    currentPage,
+    totalPages,
     handleCategoryChange,
+    handlePageChange,
     loadProducts,
   } = useProducts()
 
@@ -29,7 +32,13 @@ const HomePage = (): JSX.Element => {
         onCategoryChange={handleCategoryChange}
         isLoading={isLoading}
       />
-      <ProductList products={products} isLoading={isLoading} />
+      <ProductList
+        products={products}
+        isLoading={isLoading}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </>
   )
 }

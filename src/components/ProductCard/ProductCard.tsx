@@ -54,7 +54,9 @@ const ProductCard = ({ product }: ProductCardProps): JSX.Element => {
         )}
         <div className="product-footer">
           <div className="product-price">
-            <span className="currency">{product.currency}</span>
+            <span className="currency">
+              {product.currency === 'USD' ? '$' : product.currency}
+            </span>
             <span className="amount">{product.price.toFixed(2)}</span>
           </div>
         </div>

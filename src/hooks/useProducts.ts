@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Product, Category, SelectedCategory } from '../types/product'
 import { api } from '../services/api'
 
+const ITEMS_PER_PAGE = 12
+
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -9,6 +11,9 @@ export const useProducts = () => {
     useState<SelectedCategory>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [itemsPerPage] = useState(ITEMS_PER_PAGE)
 
   const loadCategories = useCallback(async (): Promise<void> => {
     try {
@@ -17,9 +22,9 @@ export const useProducts = () => {
     } catch (err: unknown) {
       console.error('Failed to load categories:', err)
       try {
-        const products = await api.getProducts()
+        const response = await api.getProducts()
         const uniqueCategories = Array.from(
-          new Set(products.map((p: Product) => p.category))
+          new Set(response.data.map((p: Product) => p.category))
         ).map((name: string, index: number) => ({
           id: String(index + 1),
           name,
@@ -35,12 +40,17 @@ export const useProducts = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await api.getProducts(selectedCategory || undefined)
-      setProducts(data)
+      const response = await api.getProducts(
+        selectedCategory || undefined,
+        currentPage,
+        itemsPerPage
+      )
+      setProducts(response.data)
+      setTotalCount(response.total)
       setCategories((prevCategories: Category[]) => {
-        if (prevCategories.length === 0 && data.length > 0) {
+        if (prevCategories.length === 0 && response.data.length > 0) {
           const uniqueCategories = Array.from(
-            new Set(data.map((p: Product) => p.category))
+            new Set(response.data.map((p: Product) => p.category))
           ).map((name: string, index: number) => ({
             id: String(index + 1),
             name,
@@ -55,7 +65,7 @@ export const useProducts = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [selectedCategory])
+  }, [selectedCategory, currentPage, itemsPerPage])
 
   useEffect(() => {
     loadCategories()
@@ -65,8 +75,19 @@ export const useProducts = () => {
     loadProducts()
   }, [loadProducts])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory])
+
   const handleCategoryChange = (category: SelectedCategory): void =>
     setSelectedCategory(category)
+
+  const handlePageChange = (page: number): void => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   return {
     products,
@@ -74,7 +95,12 @@ export const useProducts = () => {
     selectedCategory,
     isLoading,
     error,
+    currentPage,
+    totalPages,
+    totalCount,
+    itemsPerPage,
     handleCategoryChange,
+    handlePageChange,
     loadProducts,
   }
 }
