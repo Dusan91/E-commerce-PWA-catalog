@@ -71,8 +71,6 @@ dualSoft/
 │   │   └── product.ts      # Product and category types
 │   ├── constants/          # Application constants
 │   │   └── index.ts        # Cache, image, and app constants
-│   ├── utils/              # Utility functions
-│   │   └── placeholder.ts  # Placeholder image utilities
 │   ├── App.tsx             # Main application component with routing
 │   ├── App.css             # Application styles
 │   ├── main.tsx            # Application entry point
