@@ -149,7 +149,6 @@
   display: block;
 }
 
-/* Image Navigation Arrows */
 .image-nav-button {
   position: absolute;
   top: 50%;
@@ -184,7 +183,6 @@
   right: 16px;
 }
 
-/* Zoom Overlay */
 .zoom-overlay {
   position: fixed;
   top: 0;
@@ -518,4 +516,3 @@
     right: 12px;
   }
 }
-

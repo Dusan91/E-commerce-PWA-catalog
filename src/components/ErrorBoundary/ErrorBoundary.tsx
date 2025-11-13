@@ -27,18 +27,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to console in development
     if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo)
     }
-
     this.setState({
       error,
       errorInfo,
     })
-
-    // In production, you might want to log to an error reporting service
-    // Example: logErrorToService(error, errorInfo)
   }
 
   handleReset = (): void => {
@@ -55,12 +50,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // Use custom fallback if provided
-      if (this.props.fallback) {
-        return this.props.fallback
-      }
-
-      // Default error UI
+      if (this.props.fallback) return this.props.fallback
       return (
         <div className="error-boundary">
           <div className="error-boundary-content">

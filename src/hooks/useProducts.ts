@@ -12,13 +12,11 @@ export const useProducts = () => {
 
   const loadCategories = useCallback(async (): Promise<void> => {
     try {
-      // Try to load categories from API
       const data = await api.getCategories()
       setCategories(data)
     } catch (err: unknown) {
       console.error('Failed to load categories:', err)
       try {
-        // Fallback: extract categories from products if API fails
         const products = await api.getProducts()
         const uniqueCategories = Array.from(
           new Set(products.map((p: Product) => p.category))
@@ -28,7 +26,6 @@ export const useProducts = () => {
         }))
         setCategories(uniqueCategories)
       } catch (fallbackErr: unknown) {
-        // Fallback failed
         console.error('Fallback also failed:', fallbackErr)
       }
     }
@@ -40,7 +37,6 @@ export const useProducts = () => {
     try {
       const data = await api.getProducts(selectedCategory || undefined)
       setProducts(data)
-      // Update categories based on products
       setCategories((prevCategories: Category[]) => {
         if (prevCategories.length === 0 && data.length > 0) {
           const uniqueCategories = Array.from(
@@ -68,7 +64,6 @@ export const useProducts = () => {
   useEffect(() => {
     loadProducts()
   }, [loadProducts])
-
 
   const handleCategoryChange = (category: SelectedCategory): void =>
     setSelectedCategory(category)

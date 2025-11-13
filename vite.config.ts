@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -21,9 +20,9 @@ export default defineConfig({
           {
             src: 'vite.svg',
             sizes: 'any',
-            type: 'image/svg+xml'
-          }
-        ]
+            type: 'image/svg+xml',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
@@ -35,12 +34,12 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+                statuses: [0, 200],
+              },
+            },
           },
           {
             urlPattern: /^http:\/\/localhost:3001\/.*/i,
@@ -49,19 +48,18 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
-    })
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
   server: {
-    port: 3000
-  }
+    port: 3000,
+  },
 })
-

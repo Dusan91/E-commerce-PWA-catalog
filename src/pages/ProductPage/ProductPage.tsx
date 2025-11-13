@@ -27,9 +27,7 @@ const ProductPage = (): JSX.Element => {
         const productData = await api.getProduct(productId)
         setProduct(productData)
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load product'
-        )
+        setError(err instanceof Error ? err.message : 'Failed to load product')
       } finally {
         setIsLoading(false)
       }
@@ -52,7 +50,6 @@ const ProductPage = (): JSX.Element => {
     )
   }, [product])
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (!product) return
@@ -166,7 +163,6 @@ const ProductPage = (): JSX.Element => {
           )}
         </div>
 
-        {/* Zoom Modal */}
         {isZoomed && (
           <div
             className="zoom-overlay"
@@ -175,7 +171,10 @@ const ProductPage = (): JSX.Element => {
               if (e.key === 'Escape') setIsZoomed(false)
             }}
           >
-            <div className="zoom-container" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="zoom-container"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="zoom-close"
                 onClick={() => setIsZoomed(false)}
@@ -277,4 +276,3 @@ const ProductPage = (): JSX.Element => {
 }
 
 export default ProductPage
-
