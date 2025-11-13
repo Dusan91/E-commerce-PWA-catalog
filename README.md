@@ -10,9 +10,11 @@ A modern e-commerce product catalog application built with React, TypeScript, an
 - **Routing**: Client-side routing with React Router for seamless navigation
 - **PWA Features**:
   - Offline support with service worker caching
+  - Automatic cache pre-warming for complete offline access
   - Add to home screen capability
   - Fast loading with optimized caching strategies
   - Works reliably in poor network conditions
+  - Supports up to 500 cached API responses (7-day expiration)
 - **Responsive Design**: Mobile-first design that works on all screen sizes
 - **TypeScript**: Full type safety throughout the application
 - **Custom Hooks**: Reusable business logic encapsulated in custom React hooks
@@ -66,7 +68,8 @@ dualSoft/
 │   ├── hooks/              # Custom React hooks
 │   │   └── useProducts.ts  # Products data management hook
 │   ├── services/           # API service layer
-│   │   └── api.ts          # API client with caching
+│   │   ├── api.ts          # API client with caching
+│   │   └── cacheWarmup.ts  # Cache pre-warming utility
 │   ├── types/              # TypeScript type definitions
 │   │   └── product.ts      # Product and category types
 │   ├── constants/          # Application constants
@@ -128,6 +131,31 @@ The production build will be in the `dist` directory. To preview the production 
 npm run preview
 ```
 
+### Testing Offline Features
+
+1. **Build and serve the production version**:
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+2. **Load the app while online**:
+   - Open the app in your browser
+   - Check the browser console for cache warmup logs (🔥 Starting cache warmup...)
+   - Wait for the warmup to complete (you'll see ✅ messages)
+
+3. **Test offline mode**:
+   - Open browser DevTools → Network tab
+   - Check "Offline" checkbox
+   - Refresh the page
+   - All previously cached data should load:
+     - Product list pages
+     - Individual product detail pages
+     - Category filters
+     - Images
+
+**Note**: The cache warmup runs automatically in the background when the app loads. You can monitor its progress in the browser console.
+
 ## API Endpoints
 
 The json-server provides the following endpoints:
@@ -143,13 +171,19 @@ The json-server provides the following endpoints:
 
 The application uses Workbox (via vite-plugin-pwa) to implement service worker caching:
 
-1. **Static Assets Caching**: All JS, CSS, HTML, and image files are cached for offline access
+1. **Static Assets Caching**: All JS, CSS, HTML, and image files are precached during build for instant offline access
 2. **API Response Caching**: API responses are cached using NetworkFirst strategy:
    - Attempts to fetch from network first
    - Falls back to cache if network fails
-   - Cache expires after 24 hours (service worker) or 5 minutes (client cache)
-   - Maximum 50 cached entries (service worker) or 100 entries (client cache)
+   - Cache expires after 7 days (service worker) or 5 minutes (client cache)
+   - Maximum 500 cached entries (service worker) or 100 entries (client cache)
    - Automatic cache cleanup to prevent memory leaks
+3. **Cache Pre-warming**: Automatic background cache pre-warming on app load:
+   - Fetches all categories
+   - Caches all product list pages (pagination)
+   - Caches all individual product detail pages
+   - Caches all category filter pages
+   - Ensures complete offline access after first visit
 
 ### Manifest Configuration
 
@@ -161,9 +195,19 @@ The web app manifest enables:
 
 ### Offline Support
 
-- The service worker caches all static assets during installation
-- API responses are cached and available offline
-- Users can browse previously viewed products even without internet connection
+- **Precached Assets**: All static assets (JS, CSS, HTML, images) are precached during build
+- **Automatic Cache Pre-warming**: On first app load, the app automatically pre-warms the cache in the background:
+  - All product list pages
+  - All individual product detail pages
+  - All category filter pages
+  - All categories
+- **Complete Offline Access**: After the initial cache warmup, users can:
+  - Browse all products offline
+  - View individual product details offline
+  - Filter by category offline
+  - Navigate through pagination offline
+- **Smart Cache Matching**: Improved cache matching ensures products are found even with URL variations
+- **Service Worker Fallback**: If network fails, the service worker automatically serves cached responses
 
 ## Solution Concept
 
@@ -290,8 +334,9 @@ This e-commerce product catalog application is designed as a Progressive Web App
 **Cons**:
 
 - Uses browser memory (minimal impact for this use case)
-- Cache duration is fixed (24 hours for service worker, 5 minutes for client cache)
+- Cache duration is fixed (7 days for service worker, 5 minutes for client cache)
 - Manual cache invalidation requires API call
+- Cache pre-warming runs automatically in background on app load
 
 ### 6. TypeScript for Type Safety
 
@@ -413,15 +458,18 @@ This e-commerce product catalog application is designed as a Progressive Web App
 
 1. **Limited Offline Functionality**:
 
-   - Can only view previously cached products offline
+   - All products are automatically cached on first visit (via cache pre-warming)
+   - Can view all cached products, categories, and filters offline
    - Cannot add new products or perform mutations offline
    - No background sync for offline actions
+   - Cache must be warmed up while online first
 
 2. **Cache Management**:
 
-   - Cache expiration is fixed (24 hours for service worker, 5 minutes for client cache)
+   - Cache expiration is fixed (7 days for service worker, 5 minutes for client cache)
    - Automatic cache cleanup prevents memory leaks
-   - Cache size limits enforced (50 entries for service worker, 100 for client cache)
+   - Cache size limits enforced (500 entries for service worker, 100 for client cache)
+   - Automatic cache pre-warming ensures all data is cached on first visit
    - Manual cache clearing available via API
 
 3. **No Real Backend**:

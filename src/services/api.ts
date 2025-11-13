@@ -41,9 +41,64 @@ async function fetchWithCache<T>(
     return data as T
   } catch (error: unknown) {
     if (cached) {
-      console.warn('Network request failed, using cached data:', error)
+      console.warn(
+        'Network request failed, using in-memory cached data:',
+        error
+      )
       return cached.data as T
     }
+
+    try {
+      const swCache = await caches.open('api-cache')
+      let cachedResponse = await swCache.match(url)
+
+      if (!cachedResponse) {
+        cachedResponse = await swCache.match(
+          new Request(url, { method: 'GET' })
+        )
+      }
+
+      if (!cachedResponse && url.includes('/products/')) {
+        const productId = url.split('/products/')[1]?.split('?')[0]
+        if (productId) {
+          const allKeys = await swCache.keys()
+          const matchingKey = allKeys.find((key) => {
+            const keyUrl = typeof key === 'string' ? key : key.url
+            return (
+              keyUrl.includes(`/products/${productId}`) ||
+              keyUrl.endsWith(`/products/${productId}`)
+            )
+          })
+          if (matchingKey) {
+            cachedResponse = await swCache.match(matchingKey)
+          }
+        }
+      }
+
+      if (cachedResponse) {
+        const data = await cachedResponse.json()
+        console.log('✅ Using service worker cache for offline request:', url)
+        cache.set(cacheKey, { data, timestamp: now })
+        return data as T
+      } else {
+        console.warn('⚠️ No cached response found for:', url)
+        try {
+          const allKeys = await swCache.keys()
+          const keyUrls = allKeys
+            .slice(0, 5)
+            .map((k) => (typeof k === 'string' ? k : k.url))
+          console.log('Sample cache keys:', keyUrls)
+        } catch (e) {
+          console.error('Failed to log cache keys:', e)
+        }
+      }
+    } catch (cacheError) {
+      console.error('Failed to access service worker cache:', cacheError)
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to fetch'
+    console.error('❌ All cache checks failed for:', url, errorMessage)
     throw error
   }
 }
@@ -64,8 +119,10 @@ export const api = {
     if (page) params.append('_page', String(page))
     if (limit) params.append('_limit', String(limit))
 
-    const url = `${API_BASE_URL}/products${params.toString() ? `?${params.toString()}` : ''}`
-    
+    const url = `${API_BASE_URL}/products${
+      params.toString() ? `?${params.toString()}` : ''
+    }`
+
     const cacheKey = url
     const cached = cache.get(cacheKey)
     const now = Date.now()
@@ -76,7 +133,8 @@ export const api = {
 
     try {
       const response = await fetch(url)
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`)
       const data = await response.json()
       const total = parseInt(response.headers.get('X-Total-Count') || '0', 10)
       const result: PaginatedResponse<Product> = { data, total }
@@ -87,6 +145,20 @@ export const api = {
       if (cached) {
         console.warn('Network request failed, using cached data:', error)
         return cached.data as PaginatedResponse<Product>
+      }
+      try {
+        const swCache = await caches.open('api-cache')
+        const cachedResponse = await swCache.match(url)
+        if (cachedResponse) {
+          const data = await cachedResponse.json()
+          const totalHeader = cachedResponse.headers.get('X-Total-Count')
+          const total = totalHeader ? parseInt(totalHeader, 10) : data.length
+          const result: PaginatedResponse<Product> = { data, total }
+          console.warn('Using service worker cache for offline request:', url)
+          return result
+        }
+      } catch (cacheError) {
+        console.error('Failed to access service worker cache:', cacheError)
       }
       throw error
     }
